@@ -11,4 +11,6 @@ route.post(
   issuesController.createIssue,
 );
 
+route.get("/", issuesController.getAll);
+
 export const issuesRoute = route;
