@@ -1,8 +1,13 @@
+import config from "../../config";
 import { pool } from "../../db";
-import type { IUser } from "../../interfaces/auth.interfaces";
+import type {
+  IUserLogin,
+  IUserRegister,
+} from "../../interfaces/auth.interfaces";
 import bycrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-const registerUserDB = async (userData: IUser) => {
+const registerUserDB = async (userData: IUserRegister) => {
   const { name, email, password, role } = userData;
   const hashedPassword = await bycrypt.hash(password, 10);
   const result = await pool.query(
@@ -16,6 +21,33 @@ const registerUserDB = async (userData: IUser) => {
   return result.rows[0];
 };
 
+const loginUserDB = async (userData: IUserLogin) => {
+  const { email, password } = userData;
+  const result = await pool.query(
+    `
+    SELECT * FROM users WHERE email = $1
+    `,
+    [email],
+  );
+  const matchPassword = await bycrypt.compare(
+    password,
+    result.rows[0].password,
+  );
+  if (!matchPassword) {
+    throw new Error("Invalid credentials");
+  }
+  delete result.rows[0].password;
+  const jwtPayload = {
+    id: result.rows[0].id,
+    name: result.rows[0].name,
+    email: result.rows[0].email,
+    role: result.rows[0].role,
+  };
+  const token = jwt.sign(jwtPayload, config.JWT_SECRET, { expiresIn: "1d" });
+  return { token, user: result.rows[0] };
+};
+
 export const authService = {
   registerUserDB,
+  loginUserDB,
 };
