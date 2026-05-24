@@ -60,10 +60,28 @@ const getAllIssuesDB = async (filters: IIssueFilters) => {
   });
 };
 
+// get one issue
+const getSingleIssueDB = async (id: string) => {
+  const issueResult = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
+    id,
+  ]);
+  const issue = issueResult.rows[0];
+  if (!issue) return null;
 
+  const userResult = await pool.query(
+    `SELECT id, name, role FROM users WHERE id = $1`,
+    [issue.reporter_id],
+  );
+  const { reporter_id, ...rest } = issue;
+
+  return {
+    ...rest,
+    reporter: userResult.rows[0] || null,
+  };
+};
 
 export const issuesService = {
   createIssueDB,
   getAllIssuesDB,
-  
+  getSingleIssueDB,
 };

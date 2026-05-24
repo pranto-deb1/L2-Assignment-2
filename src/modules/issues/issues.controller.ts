@@ -45,7 +45,27 @@ const getAll = async (req: Request, res: Response) => {
   }
 };
 
+const getOne = async (req: Request, res: Response) => {
+  try {
+    const data = await issuesService.getSingleIssueDB(req.params.id as string);
+    if (!data)
+      return res
+        .status(404)
+        .json({ success: false, message: "Issue not found" });
+    res
+      .status(200)
+      .json({ success: true, message: "Issue retrieved successfully", data });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error finding issue",
+      error,
+    });
+  }
+};
+
 export const issuesController = {
   createIssue,
   getAll,
+  getOne,
 };
