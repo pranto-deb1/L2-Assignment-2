@@ -98,7 +98,7 @@ const update = async (req: Request, res: Response) => {
         message: "Unauthorized access",
       });
     }
-    const data = await issuesService.updateIssue(
+    const data = await issuesService.updateIssueDB(
       req.body,
       req.params.id as string,
       req.headers.authorization as string,
@@ -126,9 +126,41 @@ const update = async (req: Request, res: Response) => {
   }
 };
 
+// delete issue
+const deleteIssue = async (req: Request, res: Response) => {
+  if (!req.params.id) {
+    return res.status(400).json({
+      success: false,
+      message: "Issue ID is required",
+    });
+  }
+  try {
+    await issuesService.deleteIssueDB(req.params.id as string);
+    res.status(200).json({
+      success: true,
+      message: "Issue deleted successfully",
+    });
+  } catch (error) {
+    const err = error as AppError;
+
+    if (err.status) {
+      return res.status(err.status).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const issuesController = {
   createIssue,
   getAll,
   getOne,
   update,
+  deleteIssue,
 };

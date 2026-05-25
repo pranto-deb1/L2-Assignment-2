@@ -14,5 +14,10 @@ route.post(
 route.get("/", issuesController.getAll);
 route.get("/:id", issuesController.getOne);
 route.put("/:id", issuesController.update);
+route.delete(
+  "/:id",
+  authIssues(UserRoles.Maintainer),
+  issuesController.deleteIssue,
+);
 
 export const issuesRoute = route;

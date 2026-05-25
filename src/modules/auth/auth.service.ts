@@ -1,5 +1,6 @@
 import config from "../../config";
 import { pool } from "../../db";
+import { createError } from "../../errorHelper/errorHelper";
 import type {
   IUserLogin,
   IUserRegister,
@@ -29,12 +30,15 @@ const loginUserDB = async (userData: IUserLogin) => {
     `,
     [email],
   );
+  if (result.rows.length === 0) {
+    throw createError("Invalid credentials", 401);
+  }
   const matchPassword = await bycrypt.compare(
     password,
     result.rows[0].password,
   );
   if (!matchPassword) {
-    throw new Error("Invalid credentials");
+    throw createError("Invalid credentials", 401);
   }
   delete result.rows[0].password;
   const jwtPayload = {

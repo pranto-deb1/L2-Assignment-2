@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { authService } from "./auth.service";
+import type { AppError } from "../../interfaces/issues.interfaces";
 
 const registerUser = async (req: Request, res: Response) => {
   try {
@@ -19,6 +20,12 @@ const registerUser = async (req: Request, res: Response) => {
 };
 
 const loginUser = async (req: Request, res: Response) => {
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and password are required",
+    });
+  }
   try {
     const data = await authService.loginUserDB(req.body);
     res.status(200).json({
@@ -27,10 +34,18 @@ const loginUser = async (req: Request, res: Response) => {
       data,
     });
   } catch (error) {
-    res.status(500).json({
+    const err = error as AppError;
+
+    if (err.status) {
+      return res.status(err.status).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Error logging in user",
-      error,
+      message: "Internal server error",
     });
   }
 };

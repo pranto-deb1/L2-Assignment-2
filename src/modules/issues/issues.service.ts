@@ -8,6 +8,7 @@ import type {
 } from "../../interfaces/issues.interfaces";
 import jwt from "jsonwebtoken";
 import { createError } from "../../errorHelper/errorHelper";
+import { UserRoles } from "../../types";
 
 // create issue
 const createIssueDB = async (payload: IIssue, userId: number) => {
@@ -89,7 +90,7 @@ const getSingleIssueDB = async (id: string) => {
 };
 
 // update issue
-const updateIssue = async (
+const updateIssueDB = async (
   payload: IupdateIssue,
   issueId: string,
   token: string,
@@ -108,7 +109,10 @@ const updateIssue = async (
 
   const reporterId = issueResult.rows[0].reporter_id;
   const decodedToken = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
-  if (decodedToken.id !== reporterId && decodedToken.role !== "maintainer") {
+  if (
+    decodedToken.id !== reporterId &&
+    decodedToken.role !== UserRoles.Maintainer
+  ) {
     throw createError("Unauthorized", 403);
   }
 
@@ -128,9 +132,24 @@ const updateIssue = async (
   return result.rows[0];
 };
 
+// Delete issue
+const deleteIssueDB = async (issueId: string) => {
+  const issueResult = await pool.query(
+    `
+    SELECT * FROM issues WHERE id=$1
+    `,
+    [issueId],
+  );
+  if (issueResult.rows.length === 0) {
+    throw createError("Issue not found", 404);
+  }
+  await pool.query(`DELETE FROM issues WHERE id = $1`, [issueId]);
+};
+
 export const issuesService = {
   createIssueDB,
   getAllIssuesDB,
   getSingleIssueDB,
-  updateIssue,
+  updateIssueDB,
+  deleteIssueDB,
 };
