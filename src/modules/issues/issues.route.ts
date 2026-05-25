@@ -13,5 +13,6 @@ route.post(
 
 route.get("/", issuesController.getAll);
 route.get("/:id", issuesController.getOne);
+route.put("/:id", issuesController.update);
 
 export const issuesRoute = route;

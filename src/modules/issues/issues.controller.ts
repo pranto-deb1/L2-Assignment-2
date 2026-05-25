@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { issuesService } from "./issues.service";
 import type { CustomRequest } from "../../middlewares/auth";
+import type { AppError } from "../../interfaces/issues.interfaces";
 
 // create issues
 const createIssue = async (req: CustomRequest, res: Response) => {
@@ -21,10 +22,18 @@ const createIssue = async (req: CustomRequest, res: Response) => {
       data,
     });
   } catch (error) {
-    res.status(500).json({
+    const err = error as AppError;
+
+    if (err.status) {
+      return res.status(err.status).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Error creating issue",
-      error,
+      message: "Internal server error",
     });
   }
 };
@@ -37,10 +46,18 @@ const getAll = async (req: Request, res: Response) => {
       .status(200)
       .json({ success: true, message: "Issues retrieved successfully", data });
   } catch (error) {
-    res.status(500).json({
+    const err = error as AppError;
+
+    if (err.status) {
+      return res.status(err.status).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Error creating issue",
-      error,
+      message: "Internal server error",
     });
   }
 };
@@ -56,10 +73,55 @@ const getOne = async (req: Request, res: Response) => {
       .status(200)
       .json({ success: true, message: "Issue retrieved successfully", data });
   } catch (error) {
-    res.status(500).json({
+    const err = error as AppError;
+
+    if (err.status) {
+      return res.status(err.status).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Error finding issue",
-      error,
+      message: "Internal server error",
+    });
+  }
+};
+
+// update issue
+const update = async (req: Request, res: Response) => {
+  try {
+    if (!req.headers.authorization) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+    const data = await issuesService.updateIssue(
+      req.body,
+      req.params.id as string,
+      req.headers.authorization as string,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Issue updated successfully",
+      data,
+    });
+  } catch (error) {
+    const err = error as AppError;
+
+    if (err.status) {
+      return res.status(err.status).json({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
@@ -68,4 +130,5 @@ export const issuesController = {
   createIssue,
   getAll,
   getOne,
+  update,
 };

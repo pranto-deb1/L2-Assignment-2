@@ -1,5 +1,13 @@
+import { error } from "node:console";
+import config from "../../config";
 import { pool } from "../../db";
-import type { IIssue, IIssueFilters } from "../../interfaces/issues.interfaces";
+import type {
+  IIssue,
+  IIssueFilters,
+  IupdateIssue,
+} from "../../interfaces/issues.interfaces";
+import jwt from "jsonwebtoken";
+import { createError } from "../../errorHelper/errorHelper";
 
 // create issue
 const createIssueDB = async (payload: IIssue, userId: number) => {
@@ -39,7 +47,7 @@ const getAllIssuesDB = async (filters: IIssueFilters) => {
   const issues = issuesResult.rows;
 
   if (issues.length === 0) {
-    throw new Error("Issues not found");
+    throw createError("Issues not found", 404);
   }
 
   const reporterIds = [...new Set(issues.map((issue) => issue.reporter_id))];
@@ -80,8 +88,49 @@ const getSingleIssueDB = async (id: string) => {
   };
 };
 
+// update issue
+const updateIssue = async (
+  payload: IupdateIssue,
+  issueId: string,
+  token: string,
+) => {
+  const { title, description, type } = payload;
+  const issueResult = await pool.query(
+    `
+    SELECT * FROM issues WHERE id=$1
+    `,
+    [issueId],
+  );
+
+  if (issueResult.rows.length === 0) {
+    throw createError("Issue not found", 404);
+  }
+
+  const reporterId = issueResult.rows[0].reporter_id;
+  const decodedToken = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
+  if (decodedToken.id !== reporterId && decodedToken.role !== "maintainer") {
+    throw createError("Unauthorized", 403);
+  }
+
+  const result = await pool.query(
+    `
+  UPDATE issues
+  SET
+    title = COALESCE($1, title),
+    description = COALESCE($2, description),
+    type = COALESCE($3, type)
+  WHERE id = $4
+  RETURNING *
+  `,
+    [title ?? null, description ?? null, type ?? null, issueId],
+  );
+
+  return result.rows[0];
+};
+
 export const issuesService = {
   createIssueDB,
   getAllIssuesDB,
   getSingleIssueDB,
+  updateIssue,
 };
