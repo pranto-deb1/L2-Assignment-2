@@ -116,13 +116,21 @@ const updateIssueDB = async (
     throw createError("Unauthorized", 403);
   }
 
+  if (
+    decodedToken.role === UserRoles.Contributor &&
+    issueResult.rows[0].status !== "open"
+  ) {
+    throw createError("Only open issues can be updated by contributors", 403);
+  }
+
   const result = await pool.query(
     `
   UPDATE issues
   SET
     title = COALESCE($1, title),
     description = COALESCE($2, description),
-    type = COALESCE($3, type)
+    type = COALESCE($3, type),
+    updated_at = NOW()
   WHERE id = $4
   RETURNING *
   `,
