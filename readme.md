@@ -90,7 +90,7 @@ git clone https://github.com/pranto-deb1/L2-Assignment-2.git
 cd L2-Assignment-2
 ```
 
-### 2. Install Project Dependencies
+### 3. Install Project Dependencies
 
 Run the following command to install all the required packages (Express, PostgreSQL client, TypeScript, etc.):
 
@@ -98,7 +98,7 @@ Run the following command to install all the required packages (Express, Postgre
 npm install
 ```
 
-### 3. Configure Environment Variables
+### 4. Configure Environment Variables
 
 Create a file named .env in the root directory of the project and add the following variables with your actual credentials:
 
@@ -106,7 +106,7 @@ PORT=5000
 CONNECTION_STRING=your_postgresql_database_connection_string
 JWT_SECRET=your_super_secure_jwt_secret_key
 
-### 4. Run Database Initialization & Start Server
+### 5. Run Database Initialization & Start Server
 
 The project is configured to automatically initialize the database tables upon startup.
 
