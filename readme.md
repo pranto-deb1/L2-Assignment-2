@@ -81,7 +81,12 @@ Follow these instructions to get a local copy of the project up and running:
 ### 1. Clone the Repository
 
 ```bash
-git clone [Project_link](https://github.com/pranto-deb1/L2-Assignment-2.git)
+git clone https://github.com/pranto-deb1/L2-Assignment-2.git
+```
+
+### 2. Change directory
+
+```bash
 cd L2-Assignment-2
 ```
 
