@@ -10,6 +10,15 @@ import jwt from "jsonwebtoken";
 
 const registerUserDB = async (userData: IUserRegister) => {
   const { name, email, password, role } = userData;
+  const checkIfExist = await pool.query(
+    `
+    SELECT * FROM users WHERE email = $1
+    `,
+    [email],
+  );
+  if (checkIfExist.rows.length !== 0) {
+    throw createError("User already exists", 409);
+  }
   const hashedPassword = await bycrypt.hash(password, 10);
   const result = await pool.query(
     `
